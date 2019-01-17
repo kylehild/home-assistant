@@ -147,15 +147,26 @@ def test_handler_forwarding():
     assert payload == 'payload'
 
 
-@asyncio.coroutine
-def test_handling_core_messages(hass, mock_cloud):
+async def test_handling_core_messages_logout(hass, mock_cloud):
     """Test handling core messages."""
     mock_cloud.logout.return_value = mock_coro()
-    yield from iot.async_handle_cloud(hass, mock_cloud, {
+    await iot.async_handle_cloud(hass, mock_cloud, {
         'action': 'logout',
         'reason': 'Logged in at two places.'
     })
     assert len(mock_cloud.logout.mock_calls) == 1
+
+
+async def test_handling_core_messages_refresh_auth(hass, mock_cloud):
+    """Test handling core messages."""
+    mock_cloud.hass = hass
+    with patch('homeassistant.components.cloud.auth_api.check_token') as mock:
+        await iot.async_handle_cloud(hass, mock_cloud, {
+            'action': 'refresh_auth',
+            'reason': 'Logged in at two places.'
+        })
+    assert len(mock.mock_calls) == 1
+    assert mock.mock_calls[0][1][0] is mock_cloud
 
 
 @asyncio.coroutine

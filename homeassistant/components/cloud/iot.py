@@ -313,15 +313,16 @@ def async_handle_google_actions(hass, cloud, payload):
 
 
 @HANDLERS.register('cloud')
-@asyncio.coroutine
-def async_handle_cloud(hass, cloud, payload):
+async def async_handle_cloud(hass, cloud, payload):
     """Handle an incoming IoT message for cloud component."""
     action = payload['action']
 
     if action == 'logout':
-        yield from cloud.logout()
+        await cloud.logout()
         _LOGGER.error("You have been logged out from Home Assistant cloud: %s",
                       payload['reason'])
+    elif action == 'refresh_auth':
+        await cloud.hass.async_add_executor_job(auth_api.check_token, cloud)
     else:
         _LOGGER.warning("Received unknown cloud action: %s", action)
 
